@@ -1,0 +1,210 @@
+
+[Problem 1] Understanding the content of the competition
+
+The competition's overview page and report what the "Home Credit Default Risk" competition looks like from the following perspectives
+
+What kind of company is Home Credit? Home Credit - This is a non-banking financial institution, which was founded in 1997 in Czech Republic.
+
+This company operates in 14 different countries (including United States, Russia, Kazahstan, Belarus, China, India) and focuses on lending primarily to people with little or no credit history who may either not obtain loans or became victims of untrustworthly lenders.
+
+This group has over 29 million customers, total assests of 21 billions Euro, over 160 millions loansand with the majority in Asia and and almost half of them in China (as of 19-05-2018)
+
+They are like a Micro-Finance company() that gives or grant loan which strives to broaden financial inclusion for the unbanked population by providing a positive and safe borrowing experience
+
+What is expected in this competition? Proper preditions are to be made with the uses of a variety of alternative data - including telco and transactional information in other to know how capable each applicant is of repaying a loan.
+
+What are the benefits companies can gain by predicting this This will help them unlock the full potential of their data. And also will ensure that clients capable of repayment are not rejected and that loans are given with a principal, maturity, and repayment calendar that will empower their clients to be successful.
+
+
+[Problem 2] Understanding the overview of data
+
+import pandas as pd 
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+application = pd.read_csv("application_train.csv")
+application.head()
+application.info()
+application.describe()
+application.count()
+
+
+
+This is to check missing data or values
+
+def missing_data(data):
+    total = data.isnull().sum().sort_values(ascending = False)
+    percent = (data.isnull().sum()/data.isnull().count()*100).sort_values(ascending = False)
+    return pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
+
+missing_data(application).head(10)
+     
+
+application.isnull().any(axis=0).sum()
+application.isnull().any(axis=1).sum()
+
+
+
+    Draw a graph showing the percentage of classes
+
+
+X = application.drop(['TARGET'], axis=1)
+y  = application.loc[:, 'TARGET']
+
+y.value_counts()
+     
+
+label_counts = y.value_counts()
+labels = 'loan repaid or time', 'loan upaid'
+
+plt.title("Loan repaid or not")
+plt.pie(label_counts, labels=labels, autopct='%.1f%%', shadow=True, startangle=90)
+plt.show()
+
+
+
+TARGET value 0 means loan is repayed, value 1 means loan is not repayed
+
+temp = application["TARGET"].value_counts()
+df = pd.DataFrame({'labels': temp.index,
+                   'values': temp.values
+                  })
+plt.figure(figsize = (6,6))
+plt.title('Application loans repayed - train dataset')
+sns.set_color_codes("pastel")
+sns.barplot(x = 'labels', y="values", data=df)
+locs, labels = plt.xticks()
+plt.show()
+     
+
+
+[Problem 3] Defining issues
+
+    Please set multiple issues / questions of your own based on the overview of the data.
+
+    Is the client single or married and/or civil marriage?
+    Does the clients have children?
+    What is the Educational Level of the clients?
+    Does applicants for credits registered their housing as
+    House/apartmen?
+    What is the type of income of the clients?
+    On which day of the week did the client apply for the loan?
+    Does the client owns a car or real estate?
+    What is the clients gender?
+    Which type of loan did the clients took?
+    How much loan did the clients take?
+    What is the Normalized population of region where client lives ?
+    How many family members does the clients have?
+    Who was accompanying client when he was applying for the loan?
+    How many rooms are in the house?
+    On which day of the week did the client apply for the loan?
+    Does the clients have a job?
+    What is the job/organization type of the clients?
+    What is the Days from birth distribution of the clients?
+    What is the distribution of total income for the clients?
+    What is the Clients income type (businessman, working, maternity leave,�)?
+    Approximately at what hour did the client apply for the loan?
+    In what year the house was built?
+    How many observation of client's social surroundings
+    with observable 30 DPD ?
+    How many days before application did client change phone?
+    Did client provide documents ?
+
+
+[Problem 4] Data exploration
+
+def plot_stats(feature,label_rotation=False,horizontal_layout=True):
+    temp = application[feature].value_counts()
+    df1 = pd.DataFrame({feature: temp.index,'Number of contracts': temp.values})
+
+    # Calculate the percentage of target=1 per category value
+    cat_perc = application[[feature, 'TARGET']].groupby([feature],as_index=False).mean()
+    cat_perc.sort_values(by='TARGET', ascending=False, inplace=True)
+    
+    if(horizontal_layout):
+        fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(12,6))
+    else:
+        fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(12,14))
+    sns.set_color_codes("pastel")
+    s = sns.barplot(ax=ax1, x = feature, y="Number of contracts",data=df1)
+    if(label_rotation):
+        s.set_xticklabels(s.get_xticklabels(),rotation=90)
+    
+    s = sns.barplot(ax=ax2, x = feature, y='TARGET', order=cat_perc[feature], data=cat_perc)
+    if(label_rotation):
+        s.set_xticklabels(s.get_xticklabels(),rotation=90)
+    plt.ylabel('Percent of target with value 1 [%]', fontsize=10)
+    plt.tick_params(axis='both', which='major', labelsize=10)
+
+    plt.show();
+     
+     def plot_distribution(var):
+    
+    i = 0
+    t1 = application.loc[application['TARGET'] != 0]
+    t0 = application.loc[application['TARGET'] == 0]
+
+    sns.set_style('whitegrid')
+    plt.figure()
+    fig, ax = plt.subplots(2,2,figsize=(12,12))
+
+    for feature in var:
+        i += 1
+        plt.subplot(2,2,i)
+        sns.kdeplot(t1[feature], bw=0.5,label="TARGET = 1")
+        sns.kdeplot(t0[feature], bw=0.5,label="TARGET = 0")
+        plt.ylabel('Density plot', fontsize=12)
+        plt.xlabel(feature, fontsize=12)
+        locs, labels = plt.xticks()
+        plt.tick_params(axis='both', which='major', labelsize=12)
+        plt.show()
+plot_stats('NAME_CONTRACT_TYPE')
+plot_stats('CNT_CHILDREN')
+plot_stats('NAME_FAMILY_STATUS',True, True)
+plot_stats('NAME_EDUCATION_TYPE',True)
+plot_stats('NAME_HOUSING_TYPE',True)
+plot_stats('FLAG_OWN_CAR')
+plot_stats('FLAG_OWN_REALTY')
+plot_stats('CODE_GENDER')
+plot_stats('OCCUPATION_TYPE',True, False)
+plot_stats('CNT_FAM_MEMBERS',True)
+plot_stats('ORGANIZATION_TYPE',True, False)
+plot_stats('NAME_TYPE_SUITE',True)
+plot_stats('NAME_INCOME_TYPE',False,False)
+
+# Plot distribution of one feature
+def plot_distribution(feature,color):
+    plt.figure(figsize=(10,6))
+    plt.title("Distribution of %s" % feature)
+    sns.displot(application[feature].dropna(),color=color, kde=True,bins=100)
+    plt.show()
+    
+    # Plot distribution of multiple features, with TARGET = 1/0 on the same graph
+def plot_distribution_comp(var,nrow=2):
+    
+    i = 0
+    t1 = application.loc[application['TARGET'] != 0]
+    t0 = application.loc[application['TARGET'] == 0]
+
+    sns.set_style('whitegrid')
+    plt.figure()
+    fig, ax = plt.subplots(nrow,2,figsize=(12,6*nrow))
+
+    for feature in var:
+        i += 1
+        plt.subplot(nrow,2,i)
+        sns.kdeplot(t1[feature], bw=0.5,label="TARGET = 1")
+        sns.kdeplot(t0[feature], bw=0.5,label="TARGET = 0")
+        plt.ylabel('Density plot', fontsize=12)
+        plt.xlabel(feature, fontsize=12)
+        locs, labels = plt.xticks()
+        plt.tick_params(axis='both', which='major', labelsize=12)
+    plt.show();
+    
+plot_distribution('AMT_INCOME_TOTAL','red')
+plot_distribution('DAYS_BIRTH','blue')
+plot_stats('WEEKDAY_APPR_PROCESS_START','green')
+plot_distribution('HOUR_APPR_PROCESS_START','brown')
